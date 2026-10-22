@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infomatirx — Mission Control</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#3b82f6', 600: '#2563eb' },
+            surface: { 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="bg-surface-950 text-slate-100 min-h-screen font-sans flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-surface-900/80 backdrop-blur sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
+        IX
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-lg font-bold tracking-tight text-white">Infomatirx Mission Control</h1>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 font-medium">v0.1.0 PoC</span>
+        </div>
+        <p class="text-xs text-slate-400">Autonomous AI Software Company Orchestration</p>
+      </div>
+    </div>
+
+    <!-- Live Status Indicators -->
+    <div class="flex items-center space-x-4">
+      <div class="hidden sm:flex items-center space-x-2 text-xs bg-slate-800/80 px-3 py-1.5 rounded-md border border-slate-700">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-slate-300 font-mono">SQLite Engine: Local</span>
+      </div>
+      <button onclick="fetchTasks()" class="px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span>Refresh</span>
+      </button>
+      <button onclick="openNewTaskModal()" class="px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-md shadow-blue-600/20 transition flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>New Task</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Specialist Roles Roster -->
+  <section class="bg-surface-900 border-b border-slate-800/80 px-6 py-2.5">
+    <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+      <span class="text-slate-400 font-medium">Specialist Roster:</span>
+      <div class="flex items-center space-x-3 flex-wrap">
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700/60">
+          <span>🎨</span>
+          <span class="font-semibold text-slate-200">DesignBot</span>
+          <span class="text-slate-400 text-[10px]">(Product & UX)</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700/60">
+          <span>💻</span>
+          <span class="font-semibold text-slate-200">DevBot</span>
+          <span class="text-slate-400 text-[10px]">(Architecture & Code)</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700/60">
+          <span>🧪</span>
+          <span class="font-semibold text-slate-200">TestBot</span>
+          <span class="text-slate-400 text-[10px]">(QA & Verifier)</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700/60">
+          <span>🚀</span>
+          <span class="font-semibold text-slate-200">ReleaseBot</span>
+          <span class="text-slate-400 text-[10px]">(Docs & Changelog)</span>
+        </div>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
+          <span>🛡️</span>
+          <span class="font-semibold">Founder Gatekeeper</span>
+          <span class="text-[10px] text-amber-400">(Human Signoff)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Kanban Board -->
+  <main class="flex-1 p-6 overflow-x-auto">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 min-w-[1200px]">
+
+      <!-- Column 1: BACKLOG -->
+      <div class="flex flex-col bg-surface-900 rounded-xl border border-slate-800 p-3 h-[calc(100vh-175px)]">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+            <h3 class="font-semibold text-xs uppercase tracking-wider text-slate-300">Backlog</h3>
+          </div>
+          <span id="count-BACKLOG" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">0</span>
+        </div>
+        <div id="col-BACKLOG" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- Column 2: DESIGN -->
+      <div class="flex flex-col bg-surface-900 rounded-xl border border-slate-800 p-3 h-[calc(100vh-175px)]">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+            <h3 class="font-semibold text-xs uppercase tracking-wider text-purple-300">Design</h3>
+          </div>
+          <span id="count-DESIGN" class="text-xs px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 font-mono">0</span>
+        </div>
+        <div id="col-DESIGN" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- Column 3: DEV -->
+      <div class="flex flex-col bg-surface-900 rounded-xl border border-slate-800 p-3 h-[calc(100vh-175px)]">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <h3 class="font-semibold text-xs uppercase tracking-wider text-blue-300">Development</h3>
+          </div>
+          <span id="count-DEV" class="text-xs px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 font-mono">0</span>
+        </div>
+        <div id="col-DEV" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- Column 4: TEST -->
+      <div class="flex flex-col bg-surface-900 rounded-xl border border-slate-800 p-3 h-[calc(100vh-175px)]">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+            <h3 class="font-semibold text-xs uppercase tracking-wider text-cyan-300">Testing</h3>
+          </div>
+          <span id="count-TEST" class="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 font-mono">0</span>
+        </div>
+        <div id="col-TEST" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- Column 5: WAITING_APPROVAL -->
+      <div class="flex flex-col bg-surface-900 rounded-xl border border-amber-500/30 p-3 h-[calc(100vh-175px)] ring-1 ring-amber-500/20">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <h3 class="font-semibold text-xs uppercase tracking-wider text-amber-300">Approval Gate</h3>
+          </div>
+          <span id="count-WAITING_APPROVAL" class="text-xs px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 font-mono">0</span>
+        </div>
+        <div id="col-WAITING_APPROVAL" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- Column 6: RELEASED -->
+      <div class="flex flex-col bg-surface-900 rounded-xl border border-slate-800 p-3 h-[calc(100vh-175px)]">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h3 class="font-semibold text-xs uppercase tracking-wider text-emerald-300">Released</h3>
+          </div>
+          <span id="count-RELEASED" class="text-xs px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 font-mono">0</span>
+        </div>
+        <div id="col-RELEASED" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Task Detail Drawer Modal -->
+  <div id="taskDrawer" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex justify-end">
+    <div class="w-full max-w-2xl bg-surface-900 border-l border-slate-800 h-full flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-right duration-200">
+      
+      <!-- Drawer Header -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-surface-950/50">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="drawerTaskId" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">task_001</span>
+            <span id="drawerStatusBadge" class="text-xs font-semibold px-2 py-0.5 rounded">STATUS</span>
+            <span id="drawerRoleBadge" class="text-xs px-2 py-0.5 rounded bg-blue-900/40 text-blue-300 border border-blue-800/50">Role</span>
+          </div>
+          <h2 id="drawerTitle" class="text-lg font-bold text-white mt-1">Task Title</h2>
+        </div>
+        <button onclick="closeDrawer()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        
+        <!-- Description -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Description</h4>
+          <p id="drawerDesc" class="text-sm text-slate-300 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80 leading-relaxed"></p>
+        </div>
+
+        <!-- Human Approval Gate Alert (Only shown when in WAITING_APPROVAL) -->
+        <div id="drawerApprovalBanner" class="hidden bg-amber-500/10 border border-amber-500/40 rounded-xl p-4 space-y-3">
+          <div class="flex items-start space-x-3">
+            <span class="text-2xl">🛡️</span>
+            <div>
+              <h4 class="text-sm font-bold text-amber-300">Human-in-the-Loop Release Gate</h4>
+              <p class="text-xs text-amber-200/80 mt-0.5">
+                ReleaseBot has verified deliverables and halted. Consequential actions (public deployment, publishing) require Founder authorization.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3 pt-2">
+            <input id="approvalComment" type="text" placeholder="Optional approval notes (e.g. Approved v0.1.0)" class="flex-1 bg-surface-950 border border-slate-700 rounded px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
+            <button onclick="approveRelease()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-lg shadow-emerald-600/30 transition flex items-center space-x-1.5">
+              <span>✅ Authorize & Release</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Validation Quality Gate Status -->
+        <div id="drawerValidationBox" class="rounded-xl p-3.5 border text-xs">
+          <div class="flex items-center justify-between font-semibold">
+            <span class="text-slate-300">Handoff Validator: <span id="valStage" class="text-white">STAGE</span></span>
+            <span id="valStatusBadge" class="px-2 py-0.5 rounded font-mono">STATUS</span>
+          </div>
+          <div id="valErrors" class="mt-2 space-y-1 text-red-300 hidden"></div>
+        </div>
+
+        <!-- Simulate Agent Action Runner -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Simulate Specialist Action</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button onclick="simulateStep('design')" class="p-2 rounded-lg bg-purple-950/40 border border-purple-800/40 hover:bg-purple-900/50 text-purple-200 text-xs text-left transition">
+              <span class="font-bold block">1. 🎨 DesignBot</span>
+              <span class="text-[10px] text-purple-300/70">Draft Spec</span>
+            </button>
+            <button onclick="simulateStep('dev')" class="p-2 rounded-lg bg-blue-950/40 border border-blue-800/40 hover:bg-blue-900/50 text-blue-200 text-xs text-left transition">
+              <span class="font-bold block">2. 💻 DevBot</span>
+              <span class="text-[10px] text-blue-300/70">Implement</span>
+            </button>
+            <button onclick="simulateStep('test')" class="p-2 rounded-lg bg-cyan-950/40 border border-cyan-800/40 hover:bg-cyan-900/50 text-cyan-200 text-xs text-left transition">
+              <span class="font-bold block">3. 🧪 TestBot</span>
+              <span class="text-[10px] text-cyan-300/70">Run Tests</span>
+            </button>
+            <button onclick="simulateStep('release')" class="p-2 rounded-lg bg-amber-950/40 border border-amber-800/40 hover:bg-amber-900/50 text-amber-200 text-xs text-left transition">
+              <span class="font-bold block">4. 🚀 ReleaseBot</span>
+              <span class="text-[10px] text-amber-300/70">Package</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Deliverables on Disk -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Saved Deliverables & Artifacts</h4>
+          <div id="drawerArtifactsList" class="space-y-2"></div>
+        </div>
+
+        <!-- Audit Timeline -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Chronological Audit Timeline</h4>
+          <div id="drawerEventsTimeline" class="space-y-2.5 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- New Task Modal -->
+  <div id="newTaskModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Create New Task</h3>
+        <button onclick="closeNewTaskModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Task Title</label>
+        <input id="newTitle" type="text" placeholder="e.g. Build JSON Schema Validator" class="w-full bg-surface-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Description / Goal</label>
+        <textarea id="newDesc" rows="3" placeholder="Explain what the feature needs to accomplish..." class="w-full bg-surface-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"></textarea>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeNewTaskModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-700 text-xs font-medium text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button onclick="submitNewTask()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-md shadow-blue-600/30">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artifact Content Preview Modal -->
+  <div id="artifactModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-surface-900 border border-slate-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="artModalTitle" class="text-md font-bold text-white font-mono">spec.md</h3>
+        <button onclick="closeArtifactModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto bg-surface-950 p-4 rounded-xl border border-slate-800">
+        <pre id="artModalContent" class="text-xs text-slate-200 font-mono whitespace-pre-wrap leading-relaxed"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frontend Client Script -->
+  <script>
+    let currentTaskId = null;
+    let allTasks = [];
+
+    const COLUMNS = ['BACKLOG', 'DESIGN', 'DEV', 'TEST', 'WAITING_APPROVAL', 'RELEASED'];
+
+    async function fetchTasks() {
+      try {
+        const res = await fetch('/api/tasks');
+        const data = await res.json();
+        allTasks = data.tasks || [];
+        renderBoard(allTasks);
+        if (currentTaskId) {
+          openDrawer(currentTaskId);
+        }
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err);
+      }
+    }
+
+    function renderBoard(tasks) {
+      COLUMNS.forEach(col => {
+        const colEl = document.getElementById(`col-${col}`);
+        const countEl = document.getElementById(`count-${col}`);
+        if (!colEl) return;
+        colEl.innerHTML = '';
+        
+        const colTasks = tasks.filter(t => t.status === col);
+        countEl.textContent = colTasks.length;
+
+        if (colTasks.length === 0) {
+          colEl.innerHTML = `<div class="h-24 border border-dashed border-slate-800 rounded-lg flex items-center justify-center text-slate-600 text-xs">No tasks</div>`;
+          return;
+        }
+
+        colTasks.forEach(task => {
+          const card = document.createElement('div');
+          card.className = "bg-surface-950 border border-slate-800/90 hover:border-blue-500/60 p-3.5 rounded-xl cursor-pointer transition shadow-sm hover:shadow-md space-y-2 group";
+          card.onclick = () => openDrawer(task.id);
+
+          const roleColors = {
+            DesignBot: 'text-purple-400 bg-purple-950/60 border-purple-800/40',
+            DevBot: 'text-blue-400 bg-blue-950/60 border-blue-800/40',
+            TestBot: 'text-cyan-400 bg-cyan-950/60 border-cyan-800/40',
+            ReleaseBot: 'text-amber-400 bg-amber-950/60 border-amber-800/40',
+            Human: 'text-emerald-400 bg-emerald-950/60 border-emerald-800/40'
+          };
+          const roleClass = roleColors[task.assigned_role] || 'text-slate-400 bg-slate-800';
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-mono text-slate-500">${task.id}</span>
+              <span class="px-2 py-0.5 rounded border text-[10px] font-semibold ${roleClass}">${task.assigned_role}</span>
+            </div>
+            <h4 class="font-semibold text-sm text-slate-100 group-hover:text-blue-400 transition leading-snug">${task.title}</h4>
+            <p class="text-xs text-slate-400 line-clamp-2">${task.description}</p>
+          `;
+          colEl.appendChild(card);
+        });
+      });
+    }
+
+    async function openDrawer(taskId) {
+      currentTaskId = taskId;
+      try {
+        const res = await fetch(`/api/tasks/${taskId}`);
+        const data = await res.json();
+        const task = data.task;
+        const events = data.events || [];
+        const artifacts = data.artifacts || [];
+        const val = data.validation;
+
+        document.getElementById('drawerTaskId').textContent = task.id;
+        document.getElementById('drawerTitle').textContent = task.title;
+        document.getElementById('drawerDesc').textContent = task.description;
+        
+        // Status Badge
+        const statusEl = document.getElementById('drawerStatusBadge');
+        statusEl.textContent = task.status;
+        statusEl.className = task.status === 'RELEASED' ? 'text-xs font-semibold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800' :
+                             task.status === 'WAITING_APPROVAL' ? 'text-xs font-semibold px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 animate-pulse' :
+                             'text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300';
+
+        document.getElementById('drawerRoleBadge').textContent = `Assigned: ${task.assigned_role}`;
+
+        // Human Approval Banner
+        const approvalBanner = document.getElementById('drawerApprovalBanner');
+        if (task.status === 'WAITING_APPROVAL') {
+          approvalBanner.classList.remove('hidden');
+        } else {
+          approvalBanner.classList.add('hidden');
+        }
+
+        // Validation Box
+        const valBox = document.getElementById('drawerValidationBox');
+        const valStage = document.getElementById('valStage');
+        const valBadge = document.getElementById('valStatusBadge');
+        const valErrors = document.getElementById('valErrors');
+        
+        if (val) {
+          valBox.classList.remove('hidden');
+          valStage.textContent = val.stage;
+          if (val.is_valid) {
+            valBox.className = "rounded-xl p-3.5 border text-xs bg-emerald-950/20 border-emerald-800/40";
+            valBadge.textContent = "PASS [OK]";
+            valBadge.className = "px-2 py-0.5 rounded font-mono bg-emerald-900/60 text-emerald-300 border border-emerald-700/50";
+            valErrors.classList.add('hidden');
+          } else {
+            valBox.className = "rounded-xl p-3.5 border text-xs bg-red-950/20 border-red-800/40";
+            valBadge.textContent = "BLOCKED";
+            valBadge.className = "px-2 py-0.5 rounded font-mono bg-red-900/60 text-red-300 border border-red-700/50";
+            valErrors.classList.remove('hidden');
+            valErrors.innerHTML = val.errors.map(e => `<div>❌ ${e}</div>`).join('');
+          }
+        } else {
+          valBox.classList.add('hidden');
+        }
+
+        // Render Artifacts
+        const artList = document.getElementById('drawerArtifactsList');
+        if (artifacts.length === 0) {
+          artList.innerHTML = `<div class="text-xs text-slate-500 italic">No deliverables saved yet.</div>`;
+        } else {
+          artList.innerHTML = artifacts.map(a => `
+            <div onclick="previewArtifact('${task.id}', '${a.filename}')" class="flex items-center justify-between p-2.5 rounded-lg bg-surface-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer transition text-xs">
+              <div class="flex items-center space-x-2">
+                <span>📄</span>
+                <span class="font-mono font-semibold text-slate-200">${a.filename}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">${a.artifact_type}</span>
+              </div>
+              <span class="text-slate-500 text-[10px]">by ${a.created_by}</span>
+            </div>
+          `).join('');
+        }
+
+        // Render Timeline
+        const evList = document.getElementById('drawerEventsTimeline');
+        if (events.length === 0) {
+          evList.innerHTML = `<div class="text-xs text-slate-500 italic ml-6">No events recorded.</div>`;
+        } else {
+          const badgeStyles = {
+            SIMULATED_MESSAGE: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+            TOOL_EXECUTION: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+            STATUS_CHANGE: 'bg-slate-700 text-slate-300 border-slate-600',
+            ARTIFACT_CREATED: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+            HUMAN_APPROVAL: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+          };
+          evList.innerHTML = events.map(e => `
+            <div class="relative pl-6 pb-2">
+              <div class="absolute left-2.5 top-1.5 w-2.5 h-2.5 rounded-full bg-slate-700 border-2 border-surface-900"></div>
+              <div class="text-xs space-y-1">
+                <div class="flex items-center space-x-2">
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border ${badgeStyles[e.event_type] || 'bg-slate-800'}">${e.event_type}</span>
+                  <span class="font-semibold text-slate-300">&lt;${e.actor}&gt;</span>
+                  <span class="text-[10px] text-slate-500 font-mono">${e.timestamp.slice(11, 19)}</span>
+                </div>
+                <p class="text-slate-300">${e.content}</p>
+                ${e.metadata && Object.keys(e.metadata).length > 0 ? `
+                  <pre class="bg-surface-950 p-2 rounded text-[10px] text-slate-400 font-mono overflow-x-auto border border-slate-800/60">${JSON.stringify(e.metadata, null, 2)}</pre>
+                ` : ''}
+              </div>
+            </div>
+          `).join('');
+        }
+
+        document.getElementById('taskDrawer').classList.remove('hidden');
+      } catch (err) {
+        console.error('Error opening drawer:', err);
+      }
+    }
+
+    function closeDrawer() {
+      document.getElementById('taskDrawer').classList.add('hidden');
+      currentTaskId = null;
+    }
+
+    function openNewTaskModal() {
+      document.getElementById('newTaskModal').classList.remove('hidden');
+    }
+
+    function closeNewTaskModal() {
+      document.getElementById('newTaskModal').classList.add('hidden');
+    }
+
+    async function submitNewTask() {
+      const title = document.getElementById('newTitle').value.trim();
+      const desc = document.getElementById('newDesc').value.trim();
+      if (!title) return alert('Title is required.');
+
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description: desc })
+      });
+      if (res.ok) {
+        closeNewTaskModal();
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newDesc').value = '';
+        fetchTasks();
+      }
+    }
+
+    async function simulateStep(step) {
+      if (!currentTaskId) return;
+      const res = await fetch(`/api/tasks/${currentTaskId}/simulate-step`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step })
+      });
+      if (res.ok) {
+        fetchTasks();
+      } else {
+        const err = await res.json();
+        alert(`Error simulating step: ${err.error || 'Failed'}`);
+      }
+    }
+
+    async function approveRelease() {
+      if (!currentTaskId) return;
+      const comment = document.getElementById('approvalComment').value.trim() || 'Approved by Founder from Mission Control UI.';
+      const res = await fetch(`/api/tasks/${currentTaskId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approver: 'Founder', comment })
+      });
+      if (res.ok) {
+        fetchTasks();
+      } else {
+        const err = await res.json();
+        alert(`Approval failed: ${err.error}`);
+      }
+    }
+
+    async function previewArtifact(taskId, filename) {
+      const res = await fetch(`/api/artifacts/${taskId}/${filename}`);
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('artModalTitle').textContent = `${data.filename} (${data.type})`;
+        document.getElementById('artModalContent').textContent = data.content;
+        document.getElementById('artifactModal').classList.remove('hidden');
+      }
+    }
+
+    function closeArtifactModal() {
+      document.getElementById('artifactModal').classList.add('hidden');
+    }
+
+    // Auto-fetch on boot
+    fetchTasks();
+    // Poll every 4 seconds for live activity
+    setInterval(fetchTasks, 4000);
+  </script>
+</body>
+</html>

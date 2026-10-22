@@ -1,6 +1,7 @@
 """
 Command-Line Interface (CLI) for Infomatirx Mission Control Core Engine.
-Allows managing tasks, reviewing events, and inspecting deliverables directly from the terminal.
+Allows managing tasks, reviewing events, and inspecting deliverables directly from the terminal,
+or launching the Mission Control local Web UI.
 """
 
 import argparse
@@ -10,6 +11,7 @@ from infomatirx.manager import InfomatirxManager
 from infomatirx.models import TaskStatus, AgentRole, EventType
 from infomatirx.validator import HandoffValidator
 from infomatirx.agents.contracts import get_agent_contract
+from infomatirx.server import run_server
 
 
 def format_table(rows, headers):
@@ -38,6 +40,11 @@ def main():
 
     # Command: init
     subparsers.add_parser("init", help="Initialize local SQLite database and directory structure")
+
+    # Command: serve
+    serve_parser = subparsers.add_parser("serve", help="Launch the local Mission Control Web UI dashboard")
+    serve_parser.add_argument("--host", default="127.0.0.1", help="Host interface (default: 127.0.0.1)")
+    serve_parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
 
     # Command: task-create
     create_parser = subparsers.add_parser("task-create", help="Create a new task")
@@ -79,7 +86,10 @@ def main():
     manager = InfomatirxManager()
     validator = HandoffValidator(manager)
 
-    if args.command == "init":
+    if args.command == "serve":
+        run_server(host=args.host, port=args.port)
+
+    elif args.command == "init":
         print("Infomatirx workspace initialized successfully.")
         print("Database ready at: .infomatirx/infomatirx.db")
         print("Artifacts directory ready at: .infomatirx/artifacts/")
