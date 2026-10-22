@@ -8,6 +8,8 @@ import json
 import sys
 from infomatirx.manager import InfomatirxManager
 from infomatirx.models import TaskStatus, AgentRole, EventType
+from infomatirx.validator import HandoffValidator
+from infomatirx.agents.contracts import get_agent_contract
 
 
 def format_table(rows, headers):
@@ -58,6 +60,16 @@ def main():
     status_parser.add_argument("--actor", default="Founder", help="Who made this change")
     status_parser.add_argument("--note", default=None, help="Optional transition note")
 
+    # Command: agent-contract
+    contract_parser = subparsers.add_parser("agent-contract", help="Display system prompt contract for an agent")
+    contract_parser.add_argument("role", choices=["DesignBot", "DevBot", "TestBot", "ReleaseBot"], help="Agent role name")
+
+    # Command: validate-handoff
+    val_parser = subparsers.add_parser("validate-handoff", help="Validate handoff quality gate for a task")
+    val_parser.add_argument("task_id", help="The task ID")
+    val_parser.add_argument("stage", choices=["design", "dev", "test", "release"], help="Handoff stage to validate")
+    val_parser.add_argument("--files", nargs="*", default=None, help="Optional code files to check (for dev stage)")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -65,15 +77,25 @@ def main():
         sys.exit(0)
 
     manager = InfomatirxManager()
+    validator = HandoffValidator(manager)
 
     if args.command == "init":
         print("Infomatirx workspace initialized successfully.")
         print("Database ready at: .infomatirx/infomatirx.db")
         print("Artifacts directory ready at: .infomatirx/artifacts/")
 
+    elif args.command == "agent-contract":
+        try:
+            role = AgentRole(args.role)
+            content = get_agent_contract(role)
+            print(content)
+        except Exception as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+
     elif args.command == "task-create":
         task = manager.create_task(title=args.title, description=args.desc, task_id=args.id)
-        print(f"Task created successfully!")
+        print("Task created successfully!")
         print(f"ID:       {task.id}")
         print(f"Title:    {task.title}")
         print(f"Status:   {task.status.value}")
@@ -131,6 +153,29 @@ def main():
             print(f"Task '{updated.id}' status updated to {updated.status.value}.")
         except ValueError as e:
             print(f"Error: {e}")
+            sys.exit(1)
+
+    elif args.command == "validate-handoff":
+        if args.stage == "design":
+            res = validator.validate_design_handoff(args.task_id)
+        elif args.stage == "dev":
+            res = validator.validate_dev_handoff(args.task_id, code_files=args.files)
+        elif args.stage == "test":
+            res = validator.validate_test_handoff(args.task_id)
+        elif args.stage == "release":
+            res = validator.validate_release_handoff(args.task_id, target_status=TaskStatus.RELEASED)
+
+        print(f"Handoff Stage: {res.stage}")
+        print(f"Status:        {'PASS [OK]' if res.is_valid else 'FAIL [BLOCKED]'}")
+        if res.errors:
+            print("\nBlocking Errors:")
+            for err in res.errors:
+                print(f"  [ERROR] {err}")
+        if res.warnings:
+            print("\nWarnings:")
+            for w in res.warnings:
+                print(f"  [WARN]  {w}")
+        if not res.is_valid:
             sys.exit(1)
 
 
